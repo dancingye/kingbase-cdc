@@ -6,12 +6,9 @@ import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
-import java.time.Duration;
 import java.util.Properties;
 
 public class KingbaseCDCTest {
-
-    private static final long DEFAULT_HEARTBEAT_MS = Duration.ofMinutes(5).toMillis();
 
     public static void main(String[] args) throws Exception {
 
@@ -19,10 +16,11 @@ public class KingbaseCDCTest {
         env.enableCheckpointing(3000);
 
         Properties properties = new Properties();
-        properties.setProperty("snapshot.mode", "initial");
-        properties.setProperty("debezium.slot.drop.on.stop", "true");
-        properties.setProperty("include.schema.changes", "true");
-        properties.setProperty("heartbeat.interval.ms", String.valueOf(DEFAULT_HEARTBEAT_MS));
+        //快照模式(initial: 监听器启动的时候读取全表数据, never: 不做快照)
+        properties.setProperty("snapshot.mode", "never");
+        properties.setProperty("heartbeat.interval.ms", "60000");
+        //服务名称需要唯一, 否则数据库复制槽需要几分钟才能变为active状态
+        properties.setProperty("database.server.name", "kingbase_cdc_source_" + System.currentTimeMillis());
 
         SourceFunction<String> pgsqlSource = KingbaseESSource.<String>builder()
                 .hostname("192.168.2.108")
@@ -31,7 +29,7 @@ public class KingbaseCDCTest {
                 .schemaList("public")
                 .tableList("public.*")
                 .username("system")
-                .password("test123")
+                .password("test@123")
                 .deserializer(new KingbaseDeserializationSchema())
                 .debeziumProperties(properties)
                 //一个槽只能有一个监听程序, 如果需要多个监听器要创建不同的槽

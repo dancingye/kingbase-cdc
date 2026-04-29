@@ -9,7 +9,17 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class KingbaseDeserializationSchema implements DebeziumDeserializationSchema<String> {
+
+    private static final Map<String, String> OP_MAP = new HashMap<String, String>() {{
+        put("r", "read");
+        put("c", "insert");
+        put("u", "update");
+        put("d", "delete");
+    }};
 
     @Override
     public void deserialize(SourceRecord sourceRecord, Collector<String> collector) {
@@ -38,9 +48,8 @@ public class KingbaseDeserializationSchema implements DebeziumDeserializationSch
             }
         }
 
-        String type = "update";
-        if(before == null) type = "insert";
-        if(after == null) type = "delete";
+        String op = value.getString("op");
+        String type = OP_MAP.getOrDefault(op, "unknown");
 
         result.put("schema", schema);
         result.put("tableName", tableName);
