@@ -4,6 +4,7 @@ import com.kingbase8.core.BaseConnection;
 import io.debezium.DebeziumException;
 import io.debezium.connector.kb.connection.*;
 import io.debezium.connector.kb.connection.ReplicationMessage.Operation;
+import io.debezium.connector.kb.connection.pgproto.PgProtoReplicationMessage;
 import io.debezium.connector.kb.spi.Snapshotter;
 import io.debezium.pipeline.ErrorHandler;
 import io.debezium.pipeline.source.spi.StreamingChangeEventSource;
@@ -201,7 +202,10 @@ public class KingbaseStreamingChangeEventSource implements StreamingChangeEventS
                 } else {
                     TableId tableId;
                     if (message.getOperation() != Operation.NOOP) {
-                        tableId = KingbaseSchema.parse(message.getTable());
+                        //改动：这里把模式和表明拼接在一起, 否则在KingbaseSchema.parse方法中获取不到
+                        PgProtoReplicationMessage msg = (PgProtoReplicationMessage) message;
+                        String table = msg.getSchema() + "." + msg.getTable();
+                        tableId = KingbaseSchema.parse(table);
                         Objects.requireNonNull(tableId);
                     } else {
                         tableId = null;

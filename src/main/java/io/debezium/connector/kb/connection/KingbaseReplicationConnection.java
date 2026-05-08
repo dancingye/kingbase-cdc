@@ -61,6 +61,8 @@ public class KingbaseReplicationConnection extends JdbcConnection implements Rep
     private Lsn defaultStartingPos;
     private SlotCreationResult slotCreationInfo;
     private boolean hasInitedSlot;
+
+    //对比源码, 这里进行了修改加上了Optional.empty()，否则会空指针
     private Optional<ReplicaIdentityMapper> replicaIdentityMapper = Optional.empty();
 
 

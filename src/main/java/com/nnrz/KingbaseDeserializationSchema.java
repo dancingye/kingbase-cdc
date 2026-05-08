@@ -9,16 +9,20 @@ import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+/**
+ * 自定义解释格式
+ */
 
 public class KingbaseDeserializationSchema implements DebeziumDeserializationSchema<String> {
 
     private static final Map<String, String> OP_MAP = new HashMap<String, String>() {{
-        put("r", "read");
-        put("c", "insert");
-        put("u", "update");
-        put("d", "delete");
+        put("c", "I");
+        put("u", "U");
+        put("d", "D");
     }};
 
     @Override
@@ -27,8 +31,9 @@ public class KingbaseDeserializationSchema implements DebeziumDeserializationSch
         JSONObject result = new JSONObject();
         String topic = sourceRecord.topic();
         String[] split = topic.split("\\.");
-        String schema = split[1];
-        String tableName = split[2];
+        String db = split[1];
+        String schema = split[2];
+        String tableName = split[3];
 
         Struct value = (Struct) sourceRecord.value();
         Struct before = value.getStruct("before");
@@ -51,13 +56,20 @@ public class KingbaseDeserializationSchema implements DebeziumDeserializationSch
         String op = value.getString("op");
         String type = OP_MAP.getOrDefault(op, "unknown");
 
-        result.put("schema", schema);
-        result.put("tableName", tableName);
-        result.put("before", beforeJson);
-        result.put("after", afterJson);
-        result.put("type", type);
+        //按照etl的格式, 添加额外字段
+        afterJson.put("P_TAG_IUD", type); //操作类型
+        afterJson.put("db", db); //数据库
+        afterJson.put("schema", schema); //模式
+        afterJson.put("table", tableName); //数据表
 
-        collector.collect(result.toJSONString());
+        if("D".equals(type)){
+            //如果是删除, 从before里面把id添加到after里面去
+            afterJson.put("id", beforeJson.getString("id"));
+        }
+
+        result.put("after", afterJson);
+
+        collector.collect(afterJson.toJSONString());
     }
 
     @Override
