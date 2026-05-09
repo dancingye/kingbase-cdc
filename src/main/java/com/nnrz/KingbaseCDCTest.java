@@ -13,7 +13,8 @@ public class KingbaseCDCTest {
     public static void main(String[] args) throws Exception {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.enableCheckpointing(30000);
+        //快照间隔(如果监听器异常停止了下次启动的时候会从最后一次快照的地方开始监听, 需要保证中间不丢数据的话可以开启这个)
+        //env.enableCheckpointing(30000);
 
 
         Properties properties = new Properties();
@@ -26,7 +27,7 @@ public class KingbaseCDCTest {
         SourceFunction<String> pgsqlSource = KingbaseESSource.<String>builder()
                 .hostname("192.168.2.108")
                 .port(54323)
-                .database("test_db2")
+                .database("yjzhddxt_v3")
                 .schemaList("yjzhddxt_v3")
                 .tableList("yjzhddxt_v3.*")
                 .username("system")

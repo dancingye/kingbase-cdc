@@ -22,7 +22,7 @@ public class PgCdcDemo {
                 .schemaList("yjzhddxtv3")
                 .tableList("yjzhddxtv3.test_006")
                 .username("postgres")
-                .password("GXyjt@2021")
+                .password("123456")
                 .slotName("cdc_test")
                 .decodingPluginName("pgoutput")
                 .deserializer(new JsonDebeziumDeserializationSchema())
