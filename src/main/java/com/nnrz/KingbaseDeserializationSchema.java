@@ -62,9 +62,21 @@ public class KingbaseDeserializationSchema implements DebeziumDeserializationSch
         afterJson.put("schema", schema); //模式
         afterJson.put("table", tableName); //数据表
 
+        // 从 Debezium 的 record key 中提取真实主键信息（支持联合主键）
+        Object keyObj = sourceRecord.key();
+        JSONObject primaryKeys = new JSONObject();
+        if(keyObj instanceof Struct keyStruct){
+            for(Field f : keyStruct.schema().fields()){
+                primaryKeys.put(f.name(), keyStruct.get(f));
+            }
+        }
+        afterJson.put("P_KEYS", primaryKeys);
+
+        // 如果是删除, afterJson是空的, 需要从before中把真实主键值回填进去
         if("D".equals(type)){
-            //如果是删除, 从before里面把id添加到after里面去
-            afterJson.put("id", beforeJson.getString("id"));
+            for(String keyName : primaryKeys.keySet()){
+                afterJson.put(keyName, beforeJson.get(keyName));
+            }
         }
 
         result.put("after", afterJson);

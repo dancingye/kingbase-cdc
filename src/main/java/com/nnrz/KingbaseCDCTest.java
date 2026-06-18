@@ -39,7 +39,7 @@ public class KingbaseCDCTest {
                 .port(54323)
                 .database("yjzhddxt_v3")
                 .schemaList("yjzhddxt_v3")
-                .tableList("yjzhddxt_v3.test_001", "yjzhddxt_v3.test_002")
+                .tableList("yjzhddxt_v3.wt_pptn_r_his_rainfall_202606.*", "yjzhddxt_v3.biz_weather_now")
                 .username("system")
                 .password("nnrz@5343885")
                 .deserializer(new KingbaseDeserializationSchema())
