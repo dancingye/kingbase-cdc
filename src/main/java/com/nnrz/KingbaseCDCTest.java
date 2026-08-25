@@ -28,6 +28,11 @@ public class KingbaseCDCTest {
         //快照模式(initial: 监听器启动的时候读取全表数据, never: 不做快照)
         properties.setProperty("snapshot.mode", "never");
         properties.setProperty("heartbeat.interval.ms", "60000");
+        // Capture all database tables at the publication level so partitions
+        // created after the listener starts are also available to the connector.
+        // tableList below still filters the records sent to the application.
+        properties.setProperty("publication.name", "kingbase_cdc_all_tables");
+        properties.setProperty("publication.autocreate.mode", "all_tables");
         //服务名称需要唯一, 否则数据库复制槽需要几分钟才能变为active状态, 这里把库名拼接上是为了在KingbaseDeserializationSchema解析的时候可以获取到数据库名称
         properties.setProperty("database.server.name", String.format("kingbase_cdc_source_%s.%s", System.currentTimeMillis(), "yjzhddxt_v3"));
         //自定数据解析, 这里是把时间戳微秒转成毫秒
@@ -39,7 +44,9 @@ public class KingbaseCDCTest {
                 .port(54323)
                 .database("yjzhddxt_v3")
                 .schemaList("yjzhddxt_v3")
-                .tableList("yjzhddxt_v3.wt_pptn_r_his_rainfall_202606.*", "yjzhddxt_v3.biz_weather_now")
+                .tableList(
+                        "yjzhddxt_v3\\.wt_pptn_r_his(_.*)?",
+                        "yjzhddxt_v3\\.biz_weather_now")
                 .username("system")
                 .password("nnrz@5343885")
                 .deserializer(new KingbaseDeserializationSchema())
